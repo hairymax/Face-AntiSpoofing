@@ -30,6 +30,8 @@ def parse_args():
     p.add_argument("--spoof_types", type=int, nargs="+", default=list(range(10)),
                    help="Spoof types to keep")
     args = p.parse_args()
+    if args.orig_dir[-1] != '/': args.orig_dir += '/'
+    if args.crop_dir[-1] != '/': args.crop_dir += '/'
 
     return args
 
@@ -82,10 +84,19 @@ if __name__ == "__main__":
 
         # write labels
         print('\nWriting labels...')
+        data_dir = args.crop_dir+'data'+str(args.size)
         train_label.index = train_label.index.str.replace('Data/', '')
         test_label.index  = test_label.index.str.replace('Data/', '')
-        pd.concat([train_label, test_label]).to_csv(args.crop_dir+'data'+str(args.size)+'/label.csv')
-
+        pd.concat([train_label, test_label]).to_csv(data_dir+'/label.csv')
+        
+        pd.DataFrame({'path': train_label.index.str.replace('train/', ''),
+                      'spoof_type': train_label[40].values}
+            ).to_csv(data_dir+'/train/train_target.csv', index=False)
+        
+        pd.DataFrame({'path': test_label.index.str.replace('test/', ''),
+                      'spoof_type': test_label[40].values}
+            ).to_csv(data_dir+'/test/test_target.csv', index=False)
+        
         print('\nFinished\n')
     
     else:
