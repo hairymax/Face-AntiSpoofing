@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
-# @Time : 20-6-4 下午3:40
-# @Author : zhuying
-# @Company : Minivision
-# @File : dataset_loader.py
-# @Software : PyCharm
+# Original code https://github.com/minivision-ai/Silent-Face-Anti-Spoofing
+# Author : @zhuyingSeu , Company : Minivision
+# Modified by @hairymax
 
 import os
 import cv2
 import torch
 from torch.utils.data import DataLoader, Dataset
-from torchvision.datasets import DatasetFolder 
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 import numpy as np
@@ -87,7 +83,7 @@ class DatasetLoaderFT(Dataset):
 
 
 def get_train_loader(conf):
-    size = tuple(2*[conf.dataset.input_size])
+    size = tuple(2*[conf.input_size])
     train_transform = T.Compose([
         T.ToPILImage(),
         SquarePad(),
@@ -99,8 +95,8 @@ def get_train_loader(conf):
         T.ToTensor()
     ])
     
-    if conf.dataset.spoof_categories is not None:
-        cat = conf.dataset.spoof_categories
+    if conf.spoof_categories is not None:
+        cat = conf.spoof_categories
         if cat == 'binary':
             target_transform = lambda t: 0 if t == 0 else 1
         else:
@@ -109,16 +105,16 @@ def get_train_loader(conf):
     else:
         target_transform = None
     
-    root_path = conf.dataset.train_path
-    labels_path = conf.dataset.labels_path
+    root_path = conf.train_path
+    labels_path = conf.labels_path
     trainset = DatasetLoaderFT(root_path, labels_path,
                                train_transform,
                                target_transform, 
-                               conf.dataset.ft_size, 
-                               conf.dataset.ft_size)
+                               conf.ft_size, 
+                               conf.ft_size)
     train_loader = DataLoader(
         trainset,
-        batch_size=conf.train.batch_size,
+        batch_size=conf.batch_size,
         shuffle=True,
         pin_memory=True,
         #num_workers=8

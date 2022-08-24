@@ -1,3 +1,5 @@
+# Author : @hairymax
+
 import os
 from tqdm import tqdm as tqdm
 import pandas as pd

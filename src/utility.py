@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-# @Time : 20-6-4 下午2:13
-# @Author : zhuying
-# @Company : Minivision
-# @File : utility.py
-# @Software : PyCharm
+# Original code https://github.com/minivision-ai/Silent-Face-Anti-Spoofing
+# Author : @zhuyingSeu , Company : Minivision
+# Modified by @hairymax
 
 from datetime import datetime
 import os
