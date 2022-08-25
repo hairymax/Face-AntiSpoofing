@@ -87,7 +87,8 @@ def get_train_loader(conf):
     train_transform = T.Compose([
         T.ToPILImage(),
         SquarePad(),
-        T.RandomResizedCrop(size=size, scale=(0.9, 1.1)),
+        T.Resize(size = conf.input_size),
+        #T.RandomResizedCrop(size=size, scale=(0.9, 1.1)),
         # T.ColorJitter(brightness=0.4,
         #               contrast=0.4, saturation=0.4, hue=0.1),
         T.RandomRotation(10),

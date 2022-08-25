@@ -51,10 +51,10 @@ def get_default_config():
     
     # tensorboard
     # TODO вычислять исходя из размера датасета?
-    cnf.board_loss_every = 50
+    cnf.board_loss_per_epoch = 20
     # save model/iter
     # TODO вычислять исходя из размера датасета?
-    cnf.save_every = 100
+    cnf.save_model_per_epoch = 10
 
     return cnf
 
