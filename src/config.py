@@ -23,14 +23,14 @@ def get_default_config():
     cnf.lr = 1e-1
     cnf.milestones = [10, 15, 22]  # down learing rate  # [9, 13, 15]
     cnf.gamma = 0.1
-    cnf.epochs = 10
+    cnf.epochs = 50
     cnf.momentum = 0.9
     cnf.batch_size = 256
     cnf.valid_size = 0.2
     # dataset
     cnf.input_size = 128
-    cnf.train_path = './Celeba_Spoof_crop/data{}/train'.format(cnf.input_size)
-    cnf.labels_path = './Celeba_Spoof_crop/data{}/train/train_target.csv'.format(cnf.input_size)
+    cnf.train_path = './CelebA_Spoof_crop/data{}/train'.format(cnf.input_size)
+    cnf.labels_path = './CelebA_Spoof_crop/data{}/train/train_target.csv'.format(cnf.input_size)
     cnf.spoof_categories = 'binary' 
     # [
     #     [0],     # 0     - live

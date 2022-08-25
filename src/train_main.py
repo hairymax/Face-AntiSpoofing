@@ -48,10 +48,8 @@ class TrainMain:
         run_acc = 0.
         run_loss_cls = 0.
         run_loss_ft = 0.
-        run_val_loss = 0.
         run_val_acc = 0.
         run_val_loss_cls = 0.
-        run_val_loss_ft = 0.
         
         is_first = True
         for e in range(self.start_epoch, self.conf.epochs):
@@ -78,7 +76,7 @@ class TrainMain:
                 self.step += 1
 
                 if self.step % board_loss_every == 0 and self.step != 0:
-                    board_step = self.step / len(self.train_loader)
+                    board_step = self.step // board_loss_every
                     self.writer.add_scalar('Loss/train', run_loss / board_loss_every, board_step)
                     self.writer.add_scalar('Acc/train', run_acc / board_loss_every, board_step)
                     self.writer.add_scalar('Loss_cls/train', run_loss_cls / board_loss_every, board_step)
@@ -97,33 +95,26 @@ class TrainMain:
             self.model.eval()
             board_loss_every = len(self.valid_loader) // self.board_loss_per_epoch
             save_model_every = len(self.valid_loader) // self.save_model_per_epoch
-            print('Validation on {} batches'.format(len(self.valid_loader)))
+            print('Validation on {} batches. Board loss every {} steps'.format(
+                len(self.valid_loader), board_loss_every))
             for sample, ft_sample, labels in tqdm(iter(self.valid_loader)):
                 imgs = [sample, ft_sample]
 
                 with torch.no_grad():
-                    loss, acc, loss_cls, loss_ft = self._valid_batch_data(imgs, labels)
-                run_val_loss += loss
+                    acc, loss_cls = self._valid_batch_data(imgs, labels)
                 run_val_acc += acc
                 run_val_loss_cls += loss_cls
-                run_val_loss_ft += loss_ft
 
                 self.val_step += 1
 
                 if self.val_step % board_loss_every == 0 and self.val_step != 0:
-                    board_step = self.step / len(self.valid_loader)
-                    self.writer.add_scalar('Loss/valid', run_val_loss / board_loss_every, board_step)
+                    board_step = self.val_step // board_loss_every
                     self.writer.add_scalar('Acc/valid', run_val_acc / board_loss_every, board_step)
                     self.writer.add_scalar('Loss_cls/valid', run_val_loss_cls / board_loss_every, board_step)
-                    self.writer.add_scalar('Loss_ft/valid', run_val_loss_ft / board_loss_every, board_step)
-
-                    run_val_loss = 0.
                     run_val_acc = 0.
                     run_val_loss_cls = 0.
-                    run_val_loss_ft = 0.
             
-        self._save_state(get_time(), extra=self.conf.job_name)
-        
+            self._save_state(get_time(), extra=self.conf.job_name)
         
         self.writer.close()
 
@@ -145,15 +136,13 @@ class TrainMain:
 
     def _valid_batch_data(self, imgs, labels):
         labels = labels.to(self.conf.device)
-        embeddings, feature_map = self.model.forward(imgs[0].to(self.conf.device))
+        embeddings = self.model.forward(imgs[0].to(self.conf.device))
 
         loss_cls = self.cls_criterion(embeddings, labels)
-        loss_fea = self.ft_criterion(feature_map, imgs[1].to(self.conf.device))
 
-        loss = 0.5*loss_cls + 0.5*loss_fea
         acc = self._get_accuracy(embeddings, labels)[0]
 
-        return loss.item(), acc, loss_cls.item(), loss_fea.item()
+        return acc, loss_cls.item()
 
     def _define_network(self):
         param = {

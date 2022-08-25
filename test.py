@@ -1,9 +1,8 @@
 from src import config as cfg
 from src.train_main import TrainMain
 
-conf = cfg.get_default_config()
-conf = cfg.set_job(conf)
-conf.epochs = 1
+cnf = cfg.get_default_config()
+cnf = cfg.set_job(cnf)
 
-trainer = TrainMain(conf)
+trainer = TrainMain(cnf)
 trainer.train_model()
