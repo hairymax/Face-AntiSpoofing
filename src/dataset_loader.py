@@ -5,7 +5,7 @@
 import os
 import cv2
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, random_split
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 import numpy as np
@@ -82,7 +82,7 @@ class DatasetLoaderFT(Dataset):
         return sample, ft_sample, target
 
 
-def get_train_loader(conf):
+def get_train_valid(conf):
     size = tuple(2*[conf.input_size])
     train_transform = T.Compose([
         T.ToPILImage(),
@@ -108,16 +108,18 @@ def get_train_loader(conf):
     
     root_path = conf.train_path
     labels_path = conf.labels_path
-    trainset = DatasetLoaderFT(root_path, labels_path,
-                               train_transform,
-                               target_transform, 
-                               conf.ft_size, 
-                               conf.ft_size)
-    train_loader = DataLoader(
-        trainset,
-        batch_size=conf.batch_size,
-        shuffle=True,
-        pin_memory=True,
-        #num_workers=8
-        )
-    return train_loader
+    train = DatasetLoaderFT(root_path, labels_path,
+                            train_transform,
+                            target_transform, 
+                            conf.ft_size, 
+                            conf.ft_size)
+    valid_size = int(conf.valid_size * len(train))
+    train_size = len(train) - valid_size
+    train, valid = random_split(train, [train_size, valid_size]) 
+    train_loader = DataLoader(train, batch_size=conf.batch_size,
+        shuffle=True, pin_memory=True, #num_workers=8
+    )
+    valid_loader = DataLoader(valid, batch_size=conf.batch_size,
+        shuffle=True, pin_memory=True, #num_workers=8
+    )
+    return train_loader, valid_loader

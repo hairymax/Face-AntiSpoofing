@@ -25,10 +25,10 @@ def get_default_config():
     cnf.gamma = 0.1
     cnf.epochs = 10
     cnf.momentum = 0.9
-    cnf.batch_size = 64
-    
+    cnf.batch_size = 256
+    cnf.valid_size = 0.2
     # dataset
-    cnf.input_size = 256
+    cnf.input_size = 128
     cnf.train_path = './Celeba_Spoof_crop/data{}/train'.format(cnf.input_size)
     cnf.labels_path = './Celeba_Spoof_crop/data{}/train/train_target.csv'.format(cnf.input_size)
     cnf.spoof_categories = 'binary' 
@@ -50,10 +50,8 @@ def get_default_config():
     cnf.ft_size = 2*cnf.kernel_size[0]
     
     # tensorboard
-    # TODO вычислять исходя из размера датасета?
     cnf.board_loss_per_epoch = 20
     # save model/iter
-    # TODO вычислять исходя из размера датасета?
     cnf.save_model_per_epoch = 10
 
     return cnf

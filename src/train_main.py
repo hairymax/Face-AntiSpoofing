@@ -10,17 +10,18 @@ from tensorboardX import SummaryWriter
 
 from src.utility import get_time
 from src.NN import MultiFTNet
-from src.dataset_loader import get_train_loader
+from src.dataset_loader import get_train_valid
 
 
 class TrainMain:
     def __init__(self, conf):
         self.conf = conf
-        self.board_loss_every = conf.board_loss_every
-        self.save_every = conf.save_every
+        self.board_loss_per_epoch = conf.board_loss_per_epoch
+        self.save_model_per_epoch = conf.save_model_per_epoch
         self.step = 0
+        self.val_step = 0
         self.start_epoch = 0
-        self.train_loader = get_train_loader(self.conf)
+        self.train_loader, self.valid_loader = get_train_valid(self.conf)
 
     def train_model(self):
         self._init_model_param()
@@ -43,60 +44,89 @@ class TrainMain:
         print("milestones: ", self.conf.milestones)
 
     def _train_stage(self):
-        self.model.train()
-        running_loss = 0.
-        running_acc = 0.
-        running_loss_cls = 0.
-        running_loss_ft = 0.
+        run_loss = 0.
+        run_acc = 0.
+        run_loss_cls = 0.
+        run_loss_ft = 0.
+        run_val_loss = 0.
+        run_val_acc = 0.
+        run_val_loss_cls = 0.
+        run_val_loss_ft = 0.
+        
         is_first = True
         for e in range(self.start_epoch, self.conf.epochs):
             if is_first:
                 self.writer = SummaryWriter(self.conf.log_path)
                 is_first = False
-            print('epoch {} started'.format(e))
-            print("lr: ", self.schedule_lr.get_last_lr())
 
-            for sample, ft_sample, target in tqdm(iter(self.train_loader)):
+            # Training
+            self.model.train()
+            print('Epoch {} started. lr: {}'.format(e, self.schedule_lr.get_last_lr()))
+            board_loss_every = len(self.train_loader) // self.board_loss_per_epoch
+            save_model_every = len(self.train_loader) // self.save_model_per_epoch
+            print('Training on {} batches. Board loss every {} steps'.format(
+                len(self.train_loader), board_loss_every))
+            for sample, ft_sample, labels in tqdm(iter(self.train_loader)):
                 imgs = [sample, ft_sample]
-                labels = target
 
                 loss, acc, loss_cls, loss_ft = self._train_batch_data(imgs, labels)
-                running_loss_cls += loss_cls
-                running_loss_ft += loss_ft
-                running_loss += loss
-                running_acc += acc
+                run_loss += loss
+                run_acc += acc
+                run_loss_cls += loss_cls
+                run_loss_ft += loss_ft
 
                 self.step += 1
 
-                if self.step % self.board_loss_every == 0 and self.step != 0:
-                    loss_board = running_loss / self.board_loss_every
-                    self.writer.add_scalar(
-                        'Training/Loss', loss_board, self.step)
-                    acc_board = running_acc / self.board_loss_every
-                    self.writer.add_scalar(
-                        'Training/Acc', acc_board, self.step)
-                    lr = self.optimizer.param_groups[0]['lr']
-                    self.writer.add_scalar(
-                        'Training/Learning_rate', lr, self.step)
-                    loss_cls_board = running_loss_cls / self.board_loss_every
-                    self.writer.add_scalar(
-                        'Training/Loss_cls', loss_cls_board, self.step)
-                    loss_ft_board = running_loss_ft / self.board_loss_every
-                    self.writer.add_scalar(
-                        'Training/Loss_ft', loss_ft_board, self.step)
+                if self.step % board_loss_every == 0 and self.step != 0:
+                    board_step = self.step / len(self.train_loader)
+                    self.writer.add_scalar('Loss/train', run_loss / board_loss_every, board_step)
+                    self.writer.add_scalar('Acc/train', run_acc / board_loss_every, board_step)
+                    self.writer.add_scalar('Loss_cls/train', run_loss_cls / board_loss_every, board_step)
+                    self.writer.add_scalar('Loss_ft/train', run_loss_ft / board_loss_every, board_step)
+                    self.writer.add_scalar('Learning_rate', self.optimizer.param_groups[0]['lr'], board_step)
 
-                    running_loss = 0.
-                    running_acc = 0.
-                    running_loss_cls = 0.
-                    running_loss_ft = 0.
-                if self.step % self.save_every == 0 and self.step != 0:
-                    time_stamp = get_time()
-                    self._save_state(time_stamp, extra=self.conf.job_name)
+                    run_loss = 0.
+                    run_acc = 0.
+                    run_loss_cls = 0.
+                    run_loss_ft = 0.
+                if self.step % save_model_every == 0 and self.step != 0:
+                    self._save_state(get_time(), extra=self.conf.job_name)
             self.schedule_lr.step()
 
-        time_stamp = get_time()
-        self._save_state(time_stamp, extra=self.conf.job_name)
+            # Validation
+            self.model.eval()
+            board_loss_every = len(self.valid_loader) // self.board_loss_per_epoch
+            save_model_every = len(self.valid_loader) // self.save_model_per_epoch
+            print('Validation on {} batches'.format(len(self.valid_loader)))
+            for sample, ft_sample, labels in tqdm(iter(self.valid_loader)):
+                imgs = [sample, ft_sample]
+
+                with torch.no_grad():
+                    loss, acc, loss_cls, loss_ft = self._valid_batch_data(imgs, labels)
+                run_val_loss += loss
+                run_val_acc += acc
+                run_val_loss_cls += loss_cls
+                run_val_loss_ft += loss_ft
+
+                self.val_step += 1
+
+                if self.val_step % board_loss_every == 0 and self.val_step != 0:
+                    board_step = self.step / len(self.valid_loader)
+                    self.writer.add_scalar('Loss/valid', run_val_loss / board_loss_every, board_step)
+                    self.writer.add_scalar('Acc/valid', run_val_acc / board_loss_every, board_step)
+                    self.writer.add_scalar('Loss_cls/valid', run_val_loss_cls / board_loss_every, board_step)
+                    self.writer.add_scalar('Loss_ft/valid', run_val_loss_ft / board_loss_every, board_step)
+
+                    run_val_loss = 0.
+                    run_val_acc = 0.
+                    run_val_loss_cls = 0.
+                    run_val_loss_ft = 0.
+            
+        self._save_state(get_time(), extra=self.conf.job_name)
+        
+        
         self.writer.close()
+
 
     def _train_batch_data(self, imgs, labels):
         self.optimizer.zero_grad()
@@ -110,6 +140,19 @@ class TrainMain:
         acc = self._get_accuracy(embeddings, labels)[0]
         loss.backward()
         self.optimizer.step()
+        return loss.item(), acc, loss_cls.item(), loss_fea.item()
+
+
+    def _valid_batch_data(self, imgs, labels):
+        labels = labels.to(self.conf.device)
+        embeddings, feature_map = self.model.forward(imgs[0].to(self.conf.device))
+
+        loss_cls = self.cls_criterion(embeddings, labels)
+        loss_fea = self.ft_criterion(feature_map, imgs[1].to(self.conf.device))
+
+        loss = 0.5*loss_cls + 0.5*loss_fea
+        acc = self._get_accuracy(embeddings, labels)[0]
+
         return loss.item(), acc, loss_cls.item(), loss_fea.item()
 
     def _define_network(self):
