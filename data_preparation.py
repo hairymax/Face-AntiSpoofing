@@ -84,6 +84,47 @@ def save_image(image_path, img, largest_size, scaleup = True):
     return cv2.imwrite(image_path, img)
 
 
+def read_orig_labels(orig_dir, spoof_filter=None):
+    # read labels
+    org_lbl_dir = orig_dir + 'metas/intra_test/'
+
+    train_label = pd.read_json(org_lbl_dir+'train_label.json', orient='index'
+                    ).apply(pd.to_numeric, downcast='integer')
+    test_label  = pd.read_json(org_lbl_dir+'test_label.json', orient='index'
+                    ).apply(pd.to_numeric, downcast='integer')
+    
+    print('Train / Test shape')
+    print('          original: {} / {}'.format(
+        train_label.shape, test_label.shape))
+    # filter dataset with specified spoof types
+    if spoof_filter:
+        train_label = train_label[train_label[40].isin(spoof_filter)]
+        test_label  = test_label[test_label[40].isin(spoof_filter)]
+        print('          filtered: {} / {}'.format(
+            train_label.shape, test_label.shape))
+        
+    return train_label, test_label
+
+
+def save_labels(train_label, test_label, dir, size):
+    data_dir = dir+'data'+str(size)
+    train_label.index = train_label.index.str.replace('Data/', '')
+    test_label.index  = test_label.index.str.replace('Data/', '')
+    pd.concat([train_label, test_label]).to_csv(data_dir+'/label.csv')
+    
+    if not os.path.exists(data_dir+'/train'):
+        os.makedirs(data_dir+'/train')
+    pd.DataFrame({'path': train_label.index.str.replace('train/', ''),
+                    'spoof_type': train_label[40].values}
+        ).to_csv(data_dir+'/train/train_target.csv', index=False)
+    
+    if not os.path.exists(data_dir+'/test'):
+        os.makedirs(data_dir+'/test')
+    pd.DataFrame({'path': test_label.index.str.replace('test/', ''),
+                    'spoof_type': test_label[40].values}
+        ).to_csv(data_dir+'/test/test_target.csv', index=False)
+
+
 def process_images(orig_dir, crop_dir, labels, size, scaleup=False, bbox_inc = 0.3):
     for img_path in tqdm(labels):
         img = read_image(orig_dir+img_path, bbox_inc=bbox_inc)
@@ -110,7 +151,7 @@ def parse_args():
                    help="Directory with original Celeba_Spoof dataset")
     p.add_argument("--crop_dir", type=str, default="CelebA_Spoof_crop/",
                    help="Directory to save cropped dataset")
-    p.add_argument("--size", type=int, default=256,
+    p.add_argument("--size", type=int, default=128,
                    help="Size of the largest side of the image, px")
     p.add_argument("--bbox_inc", type=check_zero_to_one, default=0.3,
                    help="Image bbox increasing")
@@ -133,22 +174,10 @@ if __name__ == "__main__":
     
     proceed = input('\nProceed? [y/n] : ').lower()[:1] == 'y'
     if proceed:
-        org_lbl_dir = args.orig_dir + 'metas/intra_test/'
-
-        # read labels
-        print('\nReading labels...')
-        train_label = pd.read_json(org_lbl_dir+'train_label.json', orient='index'
-                       ).apply(pd.to_numeric, downcast='integer')#[:10]
-        test_label  = pd.read_json(org_lbl_dir+'test_label.json', orient='index'
-                       ).apply(pd.to_numeric, downcast='integer')#[:10]
-        print('Train / Test shape : {} / {}:'.format(train_label.shape, test_label.shape))
-
-        # filter dataset with specified spoof types
-        print('\nFiltering labels...')
-        train_label = train_label[train_label[40].isin(args.spoof_types)]
-        test_label  = test_label[test_label[40].isin(args.spoof_types)]
-        print('Train / Test shape : {} / {}:'.format(train_label.shape, test_label.shape))
-
+        # Read and filter labels
+        print('\nReading and filtering labels...')
+        train_label, test_label = read_orig_labels(args.orig_dir)
+        
         # Read, Crop, Save images
         print('\nProcessing train data...') 
         process_images(args.orig_dir, args.crop_dir, 
@@ -159,18 +188,7 @@ if __name__ == "__main__":
 
         # write labels
         print('\nWriting labels...')
-        data_dir = args.crop_dir+'data'+str(args.size)
-        train_label.index = train_label.index.str.replace('Data/', '')
-        test_label.index  = test_label.index.str.replace('Data/', '')
-        pd.concat([train_label, test_label]).to_csv(data_dir+'/label.csv')
-        
-        pd.DataFrame({'path': train_label.index.str.replace('train/', ''),
-                      'spoof_type': train_label[40].values}
-            ).to_csv(data_dir+'/train/train_target.csv', index=False)
-        
-        pd.DataFrame({'path': test_label.index.str.replace('test/', ''),
-                      'spoof_type': test_label[40].values}
-            ).to_csv(data_dir+'/test/test_target.csv', index=False)
+        save_labels(train_label, test_label, args.crop_dir, args.size)
         
         print('\nFinished\n')
     

@@ -4,8 +4,6 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, PReLU, ReLU, Sigmoid, \
-    AdaptiveAvgPool2d, Sequential, Module
 
 
 class MultiFTNet(nn.Module):
@@ -80,23 +78,23 @@ class FTGenerator(nn.Module):
     
 # ------------- MiniFASNet ----------- #    
 
-class L2Norm(Module):
+class L2Norm(nn.Module):
     def forward(self, input):
         return F.normalize(input)
 
 
-class Flatten(Module):
+class Flatten(nn.Module):
     def forward(self, input):
         return input.view(input.size(0), -1)
 
 
-class Conv_block(Module):
+class Conv_block(nn.Module):
     def __init__(self, in_c, out_c, kernel=(1, 1), stride=(1, 1), padding=(0, 0), groups=1):
         super(Conv_block, self).__init__()
-        self.conv = Conv2d(in_c, out_c, kernel_size=kernel, groups=groups,
-                           stride=stride, padding=padding, bias=False)
-        self.bn = BatchNorm2d(out_c)
-        self.prelu = PReLU(out_c)
+        self.conv = nn.Conv2d(in_c, out_c, kernel_size=kernel, groups=groups,
+                              stride=stride, padding=padding, bias=False)
+        self.bn = nn.BatchNorm2d(out_c)
+        self.prelu = nn.PReLU(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -105,12 +103,12 @@ class Conv_block(Module):
         return x
 
 
-class Linear_block(Module):
+class Linear_block(nn.Module):
     def __init__(self, in_c, out_c, kernel=(1, 1), stride=(1, 1), padding=(0, 0), groups=1):
         super(Linear_block, self).__init__()
-        self.conv = Conv2d(in_c, out_channels=out_c, kernel_size=kernel,
-                           groups=groups, stride=stride, padding=padding, bias=False)
-        self.bn = BatchNorm2d(out_c)
+        self.conv = nn.Conv2d(in_c, out_channels=out_c, kernel_size=kernel,
+                              groups=groups, stride=stride, padding=padding, bias=False)
+        self.bn = nn.BatchNorm2d(out_c)
 
     def forward(self, x):
         x = self.conv(x)
@@ -118,7 +116,7 @@ class Linear_block(Module):
         return x
 
 
-class Depth_Wise(Module):
+class Depth_Wise(nn.Module):
      def __init__(self, c1, c2, c3, residual=False, kernel=(3, 3), stride=(2, 2), padding=(1, 1), groups=1):
         super(Depth_Wise, self).__init__()
         c1_in, c1_out = c1
@@ -142,7 +140,7 @@ class Depth_Wise(Module):
         return output
 
 
-class Residual(Module):
+class Residual(nn.Module):
     def __init__(self, c1, c2, c3, num_block, groups, kernel=(3, 3), stride=(1, 1), padding=(1, 1)):
         super(Residual, self).__init__()
         modules = []
@@ -152,24 +150,24 @@ class Residual(Module):
             c3_tuple = c3[i]
             modules.append(Depth_Wise(c1_tuple, c2_tuple, c3_tuple, residual=True,
                                       kernel=kernel, padding=padding, stride=stride, groups=groups))
-        self.model = Sequential(*modules)
+        self.model = nn.Sequential(*modules)
 
     def forward(self, x):
         return self.model(x)
 
 
-class SEModule(Module):
+class SEModule(nn.Module):
     def __init__(self, channels, reduction):
         super(SEModule, self).__init__()
-        self.avg_pool = AdaptiveAvgPool2d(1)
-        self.fc1 = Conv2d(
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc1 = nn.Conv2d(
             channels, channels // reduction, kernel_size=1, padding=0, bias=False)
-        self.bn1 = BatchNorm2d(channels // reduction)
-        self.relu = ReLU(inplace=True)
-        self.fc2 = Conv2d(
+        self.bn1 = nn.BatchNorm2d(channels // reduction)
+        self.relu = nn.ReLU(inplace=True)
+        self.fc2 = nn.Conv2d(
             channels // reduction, channels, kernel_size=1, padding=0, bias=False)
-        self.bn2 = BatchNorm2d(channels)
-        self.sigmoid = Sigmoid()
+        self.bn2 = nn.BatchNorm2d(channels)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         module_input = x
@@ -183,7 +181,7 @@ class SEModule(Module):
         return module_input * x
 
 
-class ResidualSE(Module):
+class ResidualSE(nn.Module):
     def __init__(self, c1, c2, c3, num_block, groups, kernel=(3, 3), stride=(1, 1), padding=(1, 1), se_reduct=4):
         super(ResidualSE, self).__init__()
         modules = []
@@ -198,13 +196,13 @@ class ResidualSE(Module):
             else:
                 modules.append(Depth_Wise(c1_tuple, c2_tuple, c3_tuple, residual=True, kernel=kernel, padding=padding,
                                           stride=stride, groups=groups))
-        self.model = Sequential(*modules)
+        self.model = nn.Sequential(*modules)
 
     def forward(self, x):
         return self.model(x)
 
 
-class Depth_Wise_SE(Module):
+class Depth_Wise_SE(nn.Module):
     def __init__(self, c1, c2, c3, residual=False, kernel=(3, 3), stride=(2, 2), padding=(1, 1), groups=1, se_reduct=8):
         super(Depth_Wise_SE, self).__init__()
         c1_in, c1_out = c1
@@ -230,7 +228,7 @@ class Depth_Wise_SE(Module):
         return output
 
 
-class MiniFASNet(Module):
+class MiniFASNet(nn.Module):
     def __init__(self, keep, embedding_size, conv6_kernel=(7, 7),
                  drop_p=0.0, num_classes=3, img_channel=3):
         super(MiniFASNet, self).__init__()
@@ -280,10 +278,10 @@ class MiniFASNet(Module):
         self.conv_6_sep = Conv_block(keep[46], keep[47], kernel=(1, 1), stride=(1, 1), padding=(0, 0))
         self.conv_6_dw = Linear_block(keep[47], keep[48], groups=keep[48], kernel=conv6_kernel, stride=(1, 1), padding=(0, 0))
         self.conv_6_flatten = Flatten()
-        self.linear = Linear(512, embedding_size, bias=False)
-        self.bn = BatchNorm1d(embedding_size)
+        self.linear = nn.Linear(512, embedding_size, bias=False)
+        self.bn = nn.BatchNorm1d(embedding_size)
         self.drop = torch.nn.Dropout(p=drop_p)
-        self.prob = Linear(embedding_size, num_classes, bias=False)
+        self.prob = nn.Linear(embedding_size, num_classes, bias=False)
 
     def forward(self, x):
         out = self.conv1(x)

@@ -16,12 +16,13 @@ from src.dataset_loader import get_train_valid
 class TrainMain:
     def __init__(self, conf):
         self.conf = conf
-        self.board_loss_per_epoch = conf.board_loss_per_epoch
-        self.save_model_per_epoch = conf.save_model_per_epoch
         self.step = 0
         self.val_step = 0
         self.start_epoch = 0
         self.train_loader, self.valid_loader = get_train_valid(self.conf)
+        self.board_train_every = len(self.train_loader) // conf.board_loss_per_epoch
+        self.board_valid_every = len(self.valid_loader) // conf.board_loss_per_epoch
+        self.save_model_every = len(self.train_loader) // conf.save_model_per_epoch
 
     def train_model(self):
         self._init_model_param()
@@ -52,18 +53,18 @@ class TrainMain:
         run_val_loss_cls = 0.
         
         is_first = True
+
+        print('Board train loss every {} steps'.format(self.board_train_every))
+        print('Board valid loss every {} steps'.format(self.board_valid_every))
         for e in range(self.start_epoch, self.conf.epochs):
             if is_first:
                 self.writer = SummaryWriter(self.conf.log_path)
                 is_first = False
 
             # Training
-            self.model.train()
             print('Epoch {} started. lr: {}'.format(e, self.schedule_lr.get_last_lr()))
-            board_loss_every = len(self.train_loader) // self.board_loss_per_epoch
-            save_model_every = len(self.train_loader) // self.save_model_per_epoch
-            print('Training on {} batches. Board loss every {} steps'.format(
-                len(self.train_loader), board_loss_every))
+            self.model.train()
+            print('Training on {} batches.'.format(len(self.train_loader)))
             for sample, ft_sample, labels in tqdm(iter(self.train_loader)):
                 imgs = [sample, ft_sample]
 
@@ -75,42 +76,37 @@ class TrainMain:
 
                 self.step += 1
 
-                if self.step % board_loss_every == 0 and self.step != 0:
-                    board_step = self.step // board_loss_every
-                    self.writer.add_scalar('Loss/train', run_loss / board_loss_every, board_step)
-                    self.writer.add_scalar('Acc/train', run_acc / board_loss_every, board_step)
-                    self.writer.add_scalar('Loss_cls/train', run_loss_cls / board_loss_every, board_step)
-                    self.writer.add_scalar('Loss_ft/train', run_loss_ft / board_loss_every, board_step)
+                if self.step % self.board_train_every == 0 and self.step != 0:
+                    board_step = self.step // self.board_train_every
+                    self.writer.add_scalar('Loss/train', run_loss / self.board_train_every, board_step)
+                    self.writer.add_scalar('Acc/train', run_acc / self.board_train_every, board_step)
+                    self.writer.add_scalar('Loss_cls/train', run_loss_cls / self.board_train_every, board_step)
+                    self.writer.add_scalar('Loss_ft/train', run_loss_ft / self.board_train_every, board_step)
                     self.writer.add_scalar('Learning_rate', self.optimizer.param_groups[0]['lr'], board_step)
 
                     run_loss = 0.
                     run_acc = 0.
                     run_loss_cls = 0.
                     run_loss_ft = 0.
-                if self.step % save_model_every == 0 and self.step != 0:
+                if self.step % self.save_model_every == 0 and self.step != 0:
                     self._save_state(get_time(), extra=self.conf.job_name)
             self.schedule_lr.step()
 
             # Validation
             self.model.eval()
-            board_loss_every = len(self.valid_loader) // self.board_loss_per_epoch
-            save_model_every = len(self.valid_loader) // self.save_model_per_epoch
-            print('Validation on {} batches. Board loss every {} steps'.format(
-                len(self.valid_loader), board_loss_every))
-            for sample, ft_sample, labels in tqdm(iter(self.valid_loader)):
-                imgs = [sample, ft_sample]
-
+            print('Validation on {} batches.'.format(len(self.valid_loader)))
+            for sample, labels in tqdm(iter(self.valid_loader)):
                 with torch.no_grad():
-                    acc, loss_cls = self._valid_batch_data(imgs, labels)
+                    acc, loss_cls = self._valid_batch_data(sample, labels)
                 run_val_acc += acc
                 run_val_loss_cls += loss_cls
 
                 self.val_step += 1
 
-                if self.val_step % board_loss_every == 0 and self.val_step != 0:
-                    board_step = self.val_step // board_loss_every
-                    self.writer.add_scalar('Acc/valid', run_val_acc / board_loss_every, board_step)
-                    self.writer.add_scalar('Loss_cls/valid', run_val_loss_cls / board_loss_every, board_step)
+                if self.val_step % self.board_valid_every == 0 and self.val_step != 0:
+                    board_step = self.val_step // self.board_valid_every
+                    self.writer.add_scalar('Acc/valid', run_val_acc / self.board_valid_every, board_step)
+                    self.writer.add_scalar('Loss_cls/valid', run_val_loss_cls / self.board_valid_every, board_step)
                     run_val_acc = 0.
                     run_val_loss_cls = 0.
             
@@ -134,12 +130,11 @@ class TrainMain:
         return loss.item(), acc, loss_cls.item(), loss_fea.item()
 
 
-    def _valid_batch_data(self, imgs, labels):
+    def _valid_batch_data(self, img, labels):
         labels = labels.to(self.conf.device)
-        embeddings = self.model.forward(imgs[0].to(self.conf.device))
+        embeddings = self.model.forward(img.to(self.conf.device))
 
         loss_cls = self.cls_criterion(embeddings, labels)
-
         acc = self._get_accuracy(embeddings, labels)[0]
 
         return acc, loss_cls.item()
@@ -172,4 +167,4 @@ class TrainMain:
     def _save_state(self, time_stamp, extra=None):
         save_path = self.conf.model_path
         torch.save(self.model.state_dict(), save_path + '/' +
-                   ('{}_{}_model_iter-{}.pth'.format(time_stamp, extra, self.step)))
+                   ('{}_{}_it-{}.pth'.format(time_stamp, extra, self.step)))
