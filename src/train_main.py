@@ -89,7 +89,7 @@ class TrainMain:
                     run_loss_cls = 0.
                     run_loss_ft = 0.
                 if self.step % self.save_model_every == 0 and self.step != 0:
-                    self._save_state(get_time(), extra=self.conf.job_name)
+                    self._save_state(get_time(), 'it-{}'.format(self.step), extra=self.conf.job_name)
             self.schedule_lr.step()
 
             # Validation
@@ -110,7 +110,7 @@ class TrainMain:
                     run_val_acc = 0.
                     run_val_loss_cls = 0.
             
-            self._save_state(get_time(), extra=self.conf.job_name)
+            self._save_state(get_time(), 'epoch-{}'.format(e), extra=self.conf.job_name)
         
         self.writer.close()
 
@@ -164,7 +164,7 @@ class TrainMain:
             ret.append(correct_k.mul_(1. / batch_size))
         return ret
 
-    def _save_state(self, time_stamp, extra=None):
+    def _save_state(self, time_stamp, stage, extra=None):
         save_path = self.conf.model_path
         torch.save(self.model.state_dict(), save_path + '/' +
-                   ('{}_{}_it-{}.pth'.format(time_stamp, extra, self.step)))
+                   ('{}_{}_{}.pth'.format(time_stamp, extra, stage)))
