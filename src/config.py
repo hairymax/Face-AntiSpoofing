@@ -40,7 +40,8 @@ SNAPSHOT_PATH = './logs/snapshot'
 LOG_PATH = './logs/jobs'
 
 
-def get_train_config(input_size=128, batch_size=256, spoof_categories='binary'):
+def get_train_config(input_size=128, batch_size=256, spoof_categories='binary', 
+                     class_balancing=None):
     cnf = EasyDict()
     
     # training
@@ -51,6 +52,8 @@ def get_train_config(input_size=128, batch_size=256, spoof_categories='binary'):
     cnf.momentum = 0.9
     cnf.batch_size = batch_size
     cnf.valid_size = 0.2
+    cnf.class_balancing = class_balancing
+    
     # dataset
     cnf.input_size = input_size
     cnf.train_path = './CelebA_Spoof_crop/data{}/train'.format(cnf.input_size)
@@ -77,7 +80,7 @@ def get_train_config(input_size=128, batch_size=256, spoof_categories='binary'):
     cnf.ft_size = [2*s for s in cnf.kernel_size]
     
     # tensorboard
-    cnf.board_loss_per_epoch = 20
+    cnf.board_loss_per_epoch = 10
     # save model/iter
     cnf.save_model_per_epoch = 5
 

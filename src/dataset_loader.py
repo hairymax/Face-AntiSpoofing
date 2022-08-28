@@ -108,13 +108,13 @@ class SquarePad:
         return F.pad(image, padding, 0, 'constant')
     
 
-def get_train_valid(conf):
+def get_train_valid(cnf):
     
     train_transform = T.Compose([
         T.ToPILImage(),
         SquarePad(),
-        #T.Resize(size = conf.input_size),
-        T.RandomResizedCrop(size=tuple(2*[conf.input_size]), 
+        #T.Resize(size = cnf.input_size),
+        T.RandomResizedCrop(size=tuple(2*[cnf.input_size]), 
                             scale=(0.9, 1.1)),
         T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1),
         T.RandomRotation(10),
@@ -125,37 +125,49 @@ def get_train_valid(conf):
     valid_transform = T.Compose([
         T.ToPILImage(),
         SquarePad(),
-        T.Resize(size = conf.input_size),
+        T.Resize(size = cnf.input_size),
         T.ToTensor()
     ])
     
-    if conf.spoof_categories is not None:
-        cat = conf.spoof_categories
-        if cat == 'binary':
-            target_transform = lambda t: 0 if t == 0 else 1
-        else:
-            target_transform = lambda t: next(i for i, l in enumerate(cat) if t in l)
-    else:
-        target_transform = None
+    train_labels = pd.read_csv(cnf.labels_path)
     
-    root_path = conf.train_path
-    train_labels = pd.read_csv(conf.labels_path)
-    train_labels, valid_labels = train_test_split(train_labels, test_size=0.2, 
+    if cnf.spoof_categories is not None:
+        cat = cnf.spoof_categories
+        if cat == 'binary':
+            spoof_transform = lambda t: 0 if t == 0 else 1
+        else:
+            spoof_transform = lambda t: next(i for i, l in enumerate(cat) if t in l)
+        train_labels.iloc[:,1] = train_labels.iloc[:,1].apply(spoof_transform)
+    
+    if cnf.class_balancing is not None:
+        cb = cnf.class_balancing
+        if cb == 'down':
+            value_counts = train_labels.iloc[:,1].value_counts()
+            train_downsampled = [
+                train_labels[train_labels.iloc[:,1]==value_counts.index[-1]]]
+            for value in value_counts.index[:-1]:
+                train_downsampled.append(
+                    train_labels[train_labels.iloc[:,1]==value].sample(
+                        value_counts.min()))
+            train_labels = pd.concat(train_downsampled)
+    
+    train_labels, valid_labels = train_test_split(train_labels, 
+                                                  test_size=cnf.valid_size, 
                                                   random_state=20220826)
+    
     train_labels = train_labels.reset_index(drop=True)
     valid_labels = valid_labels.reset_index(drop=True)
     
     train_loader = DataLoader(
-        CelebADatasetFT(root_path, train_labels,
-                        train_transform, target_transform, 
-                        ft_size=conf.ft_size), 
-        batch_size=conf.batch_size,
+        CelebADatasetFT(cnf.train_path, train_labels,
+                        train_transform, None, ft_size=cnf.ft_size), 
+        batch_size=cnf.batch_size,
         shuffle=True, pin_memory=True, #num_workers=8
     )
     valid_loader = DataLoader(
-        CelebADataset(root_path, valid_labels,
-                      valid_transform, target_transform), 
-        batch_size=conf.batch_size,
+        CelebADataset(cnf.train_path, valid_labels,
+                      valid_transform, None), 
+        batch_size=cnf.batch_size,
         shuffle=True, pin_memory=True, #num_workers=8
     )
     

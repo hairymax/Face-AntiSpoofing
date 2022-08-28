@@ -3,9 +3,6 @@
 # Modified by @hairymax
 
 from datetime import datetime
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 
 
 def get_time():
@@ -43,6 +40,8 @@ def plot_value_counts(series, n_values=25, fillna='NONE', figwidth=12,
     `verbose`: bool - показывать ли уникальные значения
     `show_percents`: bool - показывать долю значений в процентах
     '''
+    import matplotlib.pyplot as plt
+    import seaborn as sns
     _ = series.dropna().unique()
     if verbose:
         print('`{}`, {} unique values: \n{}'.format(series.name, len(_), sorted(_)))
