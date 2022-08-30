@@ -40,8 +40,8 @@ SNAPSHOT_PATH = './logs/snapshot'
 LOG_PATH = './logs/jobs'
 
 
-def get_train_config(input_size=128, batch_size=256, spoof_categories='binary', 
-                     class_balancing=None):
+def get_train_config(img_size=128, input_size=128, batch_size=256, 
+                     spoof_categories='binary', class_balancing=None):
     cnf = EasyDict()
     
     # training
@@ -55,9 +55,10 @@ def get_train_config(input_size=128, batch_size=256, spoof_categories='binary',
     cnf.class_balancing = class_balancing
     
     # dataset
+    cnf.img_size = img_size
     cnf.input_size = input_size
-    cnf.train_path = './CelebA_Spoof_crop/data{}/train'.format(cnf.input_size)
-    cnf.labels_path = './CelebA_Spoof_crop/data{}/train/train_target.csv'.format(cnf.input_size)
+    cnf.train_path = './CelebA_Spoof_crop/data{}/train'.format(cnf.img_size)
+    cnf.labels_path = './CelebA_Spoof_crop/data{}/train/train_target.csv'.format(cnf.img_size)
     cnf.spoof_categories = spoof_categories 
     # [
     #     [0],     # 0     - live
@@ -93,14 +94,17 @@ def set_train_job(cnf, name):
 
     cnf.device = "cuda:{}".format(0) if torch.cuda.is_available() else "cpu"
     
-    cnf.job_name = "{}_{}".format(name, cnf.input_size)
+    cnf.job_dir = "AntiSpoofing_{}".format(cnf.img_size)
+    cnf.job_name = "AntiSpoofing_{}_{}".format(name, cnf.input_size)
     # log path
-    cnf.log_path = "{}/{}/{}".format(LOG_PATH, cnf.job_name, current_time)
+    cnf.log_path = "{}/{}/{}_{}".format(
+        LOG_PATH, cnf.job_dir, name, current_time)
     if not os.path.exists(cnf.log_path):
         os.makedirs(cnf.log_path)
     
     # save file path
-    cnf.model_path = '{}/{}'.format(SNAPSHOT_PATH, cnf.job_name)
+    cnf.model_path = '{}/{}/{}_{}'.format(
+        SNAPSHOT_PATH, cnf.job_dir, name, current_time)
     if not os.path.exists(cnf.model_path):
         os.makedirs(cnf.model_path)
 
