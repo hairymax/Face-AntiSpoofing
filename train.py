@@ -1,9 +1,7 @@
-from src import config
+from src.config import TrainConfig
 from src.train_main import TrainMain
-cnf = config.get_train_config(spoof_categories='binary',#[[0],[1,2,3],[7,8,9]],
-                              class_balancing='down')
-
-cnf = config.set_train_job(cnf, 'bin_cb-down')
+cnf = TrainConfig(spoof_categories=[[0],[1,2,3],[7,8,9]])
+cnf.set_job('print_replay')
 
 print("Number of classes:", cnf.num_classes)
 print("Device:", cnf.device)

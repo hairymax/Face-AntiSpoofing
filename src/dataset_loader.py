@@ -1,18 +1,18 @@
-# Original code https://github.com/minivision-ai/Silent-Face-Anti-Spoofing
-# Author : @zhuyingSeu , Company : Minivision
+# Original code https://github.com/minivision-ai/Silent-Face-Anti-Spoofing by @zhuyingSeu
 # Modified by @hairymax
+# Validation and training loaders implemented
+# CelebADataset with and w/o FT implemented
 
 import os
 import cv2
 import torch
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import train_test_split
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 import numpy as np
 import pandas as pd
 
-#from src.data_io import transform as trans
 
 def opencv_loader(path):
     img = cv2.imread(path)
@@ -107,15 +107,20 @@ class SquarePad:
         padding = (p_left, p_top, p_right, p_bottom)
         return F.pad(image, padding, 0, 'constant')
     
+def transform_labels(labels, categories):
+    if categories == 'binary':
+        spoof_transform = lambda t: 0 if t == 0 else 1
+    else:
+        spoof_transform = lambda t: next(i for i, l in enumerate(categories) if t in l)
+    return labels.apply(spoof_transform)
 
-def get_train_valid(cnf):
+def get_train_valid_loader(cnf):
     
     train_transform = T.Compose([
         T.ToPILImage(),
         SquarePad(),
-        #T.Resize(size = cnf.input_size),
-        T.RandomResizedCrop(size=tuple(2*[cnf.input_size]), 
-                            scale=(0.9, 1.1)),
+        T.Resize(size=cnf.input_size),
+        T.RandomResizedCrop(size=tuple(2*[cnf.input_size]), scale=(0.9, 1.1)),
         T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1),
         T.RandomRotation(10),
         T.RandomHorizontalFlip(),
@@ -125,19 +130,15 @@ def get_train_valid(cnf):
     valid_transform = T.Compose([
         T.ToPILImage(),
         SquarePad(),
-        T.Resize(size = cnf.input_size),
+        T.Resize(size=cnf.input_size),
         T.ToTensor()
     ])
     
     train_labels = pd.read_csv(cnf.labels_path)
     
     if cnf.spoof_categories is not None:
-        cat = cnf.spoof_categories
-        if cat == 'binary':
-            spoof_transform = lambda t: 0 if t == 0 else 1
-        else:
-            spoof_transform = lambda t: next(i for i, l in enumerate(cat) if t in l)
-        train_labels.iloc[:,1] = train_labels.iloc[:,1].apply(spoof_transform)
+        train_labels.iloc[:,1] = transform_labels(train_labels.iloc[:,1],
+                                                  cnf.spoof_categories)
     
     if cnf.class_balancing is not None:
         cb = cnf.class_balancing
@@ -159,16 +160,38 @@ def get_train_valid(cnf):
     valid_labels = valid_labels.reset_index(drop=True)
     
     train_loader = DataLoader(
-        CelebADatasetFT(cnf.train_path, train_labels,
-                        train_transform, None, ft_size=cnf.ft_size), 
+        CelebADatasetFT(cnf.train_path, train_labels, train_transform, 
+                        None, ft_size=cnf.ft_size), 
         batch_size=cnf.batch_size,
         shuffle=True, pin_memory=True, #num_workers=8
     )
     valid_loader = DataLoader(
-        CelebADataset(cnf.train_path, valid_labels,
-                      valid_transform, None), 
+        CelebADataset(cnf.train_path, valid_labels, valid_transform, None), 
         batch_size=cnf.batch_size,
         shuffle=True, pin_memory=True, #num_workers=8
     )
     
     return train_loader, valid_loader
+
+
+def get_test_loader(cnf):
+    
+    test_transform = T.Compose([
+        T.ToPILImage(),
+        SquarePad(),
+        T.Resize(size = cnf.input_size),
+        T.ToTensor()
+    ])
+    
+    test_labels = pd.read_csv(cnf.labels_path)
+    
+    if cnf.spoof_categories is not None:
+        test_labels.iloc[:,1] = transform_labels(test_labels.iloc[:,1],
+                                                 cnf.spoof_categories)
+    
+    test_loader = DataLoader(
+        CelebADataset(cnf.test_path, test_labels, test_transform, None), 
+        batch_size=cnf.batch_size, pin_memory=True, #num_workers=8
+    )
+    
+    return test_loader

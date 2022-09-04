@@ -348,7 +348,6 @@ def MiniFASNetV1(embedding_size=128, conv6_kernel=(7, 7),
                      drop_p=0.2, num_classes=3, img_channel=3):
     return MiniFASNet(keep_dict['1.8M'], embedding_size, conv6_kernel, drop_p, num_classes, img_channel)
 
-
 # (80x80) flops: 0.044, params: 0.43
 def MiniFASNetV2(embedding_size=128, conv6_kernel=(7, 7),
                      drop_p=0.2, num_classes=3, img_channel=3):

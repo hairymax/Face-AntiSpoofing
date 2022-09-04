@@ -1,5 +1,4 @@
-# Original code https://github.com/minivision-ai/Silent-Face-Anti-Spoofing
-# Author : @zhuyingSeu , Company : Minivision
+# Original code https://github.com/minivision-ai/Silent-Face-Anti-Spoofing by @zhuyingSeu
 # Modified by @hairymax
 
 import torch
@@ -8,9 +7,9 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
 
-from src.utility import get_time
 from src.NN import MultiFTNet
-from src.dataset_loader import get_train_valid
+from src.dataset_loader import get_train_valid_loader
+from datetime import datetime
 
 
 class TrainMain:
@@ -19,10 +18,9 @@ class TrainMain:
         self.step = 0
         self.val_step = 0
         self.start_epoch = 0
-        self.train_loader, self.valid_loader = get_train_valid(self.conf)
+        self.train_loader, self.valid_loader = get_train_valid_loader(self.conf)
         self.board_train_every = len(self.train_loader) // conf.board_loss_per_epoch
         self.board_valid_every = len(self.valid_loader) // conf.board_loss_per_epoch
-        self.save_model_every = len(self.train_loader) // conf.save_model_per_epoch
 
     def train_model(self):
         self._init_model_param()
@@ -89,8 +87,6 @@ class TrainMain:
                     run_loss_cls = 0.
                     run_loss_ft = 0.
                     
-                if self.step % self.save_model_every == 0 and self.step != 0:
-                    self._save_state(get_time(), 'it-{}'.format(self.step))
             self.schedule_lr.step()
 
             # Validation
@@ -111,7 +107,7 @@ class TrainMain:
                     run_val_acc = 0.
                     run_val_loss_cls = 0.
             
-            self._save_state(get_time(), 'epoch-{}'.format(e))
+            self._save_state('epoch-{}'.format(e))
         
         self.writer.close()
 
@@ -165,8 +161,9 @@ class TrainMain:
             ret.append(correct_k.mul_(1. / batch_size))
         return ret
 
-    def _save_state(self, time_stamp, stage):
+    def _save_state(self, stage):
         save_path = self.conf.model_path
         job_name = self.conf.job_name
+        time_stamp = (str(datetime.now())[:-10]).replace(' ', '-').replace(':', '-')
         torch.save(self.model.state_dict(), save_path + '/' +
                    ('{}_{}_{}.pth'.format(time_stamp, job_name, stage)))
