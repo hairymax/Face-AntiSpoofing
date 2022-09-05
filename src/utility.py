@@ -145,14 +145,19 @@ def multiclass_roc_curve_plots(y_true, proba, class_labels=None, title='ROC Curv
     plt.xlabel('False Positive Rate')
     plt.show()
     
-def confusion_matricies_plots(confusion_matricies, figsize=(12,4)):
+def confusion_matricies_plots(confusion_matricies, class_labels=None, figsize=(12,4)):
     import pandas as pd
     _, ax =plt.subplots(1, len(confusion_matricies), figsize=figsize)
     i = 0
     for name, matrix in confusion_matricies.items():
         sns.heatmap(pd.DataFrame(matrix), annot=True, annot_kws={"fontsize":12}, 
                     cmap='Blues', vmin=0, vmax=1, ax=ax[i])
-        ax[i].set(title=name, xlabel='Predictions', ylabel='True')
+        ax[i].set_title(name, fontsize=14)
+        ax[i].set_xlabel('Predictions', fontsize=14)
+        ax[i].set_ylabel('True', fontsize=14)
+        if class_labels is not None:
+            ax[i].set_xticks(np.arange(0.5,len(class_labels)), class_labels, fontsize=12)
+            ax[i].set_yticks(np.arange(0.5,len(class_labels)), class_labels, fontsize=12)
         i += 1
-    plt.suptitle('Confusion matricies', fontsize=12, y=1.1)
+    plt.suptitle('Confusion matricies', fontsize=12, y=1.0)
     plt.show()
