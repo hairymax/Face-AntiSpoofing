@@ -1,11 +1,8 @@
 from collections import OrderedDict
 import torch
 import torch.nn.functional as F
-# import torchvision.transforms as T
-# import os
-from src.NN import MultiFTNet, MiniFASNetV2SE
-# from src.dataset_loader import SquarePad
 
+from src.NN import MultiFTNet, MiniFASNetV2SE
     
 class AntiSpoofPretrained:
     def __init__(self, cnf):

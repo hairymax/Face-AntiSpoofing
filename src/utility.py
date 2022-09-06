@@ -4,6 +4,7 @@ from sklearn.metrics import auc, roc_curve
 from sklearn.preprocessing import label_binarize
 import numpy as np
 
+
 def plot_value_counts(series, n_values=25, fillna='NONE', figwidth=12, 
                       bar_thickness=0.5, sort_index=False,
                       verbose=False, show_percents=False):
@@ -52,10 +53,8 @@ def plot_iter_images(iter, size, count):
     
     rows = count // 4
     if len(iter) > 2:
-        print('Training loader batch')
         sample, ft_sample, target = iter
     else:
-        print('Valitation loader batch')
         sample, target = iter
         ft_sample = None
     target = target.numpy()
@@ -65,8 +64,7 @@ def plot_iter_images(iter, size, count):
         ax.axis('off')
         
         plt.imshow(T.ToPILImage()(sample[i]), extent=(0,size,0,size))
-        plt.text(0, -20, 'spoof: {}'.format(target[i]), 
-                 fontsize = 20, color='red')
+        plt.text(0, -20, target[i], fontsize = 20, color='red')
         if ft_sample is not None:
             plt.imshow(T.ToPILImage()(ft_sample[i]), 
                        extent=(3*size/4,5*size/4,-size/4,size/4))
@@ -77,13 +75,14 @@ def plot_iter_images(iter, size, count):
         plt.tight_layout()
     plt.show()
 
-def roc_curve_plots(y_true, models_proba, title='ROC Curve', figsize=(12, 9)):
+
+def roc_curve_plots(y_true, model_proba, title='ROC Curve', figsize=(12, 9)):
     ''' Функция построения ROC кривой для моделей из переданнойго словаря
 
         Принимает:
     '''
     plt.figure(figsize=figsize)
-    for name, proba in models_proba.items():
+    for name, proba in model_proba.items():
         fpr, tpr, _ = roc_curve(y_true, proba)
         roc_auc = auc(fpr, tpr)
         plt.plot(fpr, tpr, lw=2, label='AUC = %0.4f (%s)' % (roc_auc, name))
@@ -95,6 +94,7 @@ def roc_curve_plots(y_true, models_proba, title='ROC Curve', figsize=(12, 9)):
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.show()
+
 
 def multiclass_roc_curve_plots(y_true, proba, class_labels=None, title='ROC Curve', 
                                figsize=(12, 9)):
@@ -144,6 +144,7 @@ def multiclass_roc_curve_plots(y_true, proba, class_labels=None, title='ROC Curv
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.show()
+    
     
 def confusion_matricies_plots(confusion_matricies, class_labels=None, figsize=(12,4)):
     import pandas as pd

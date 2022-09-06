@@ -137,9 +137,8 @@ def process_images(orig_dir, crop_dir, labels, size, scaleup=False, bbox_inc = 0
         save_image(new_img_path, img, size, scaleup=scaleup)
 
         
-def parse_args():
-    """parsing arguments"""
-    
+if __name__ == "__main__":
+    # parsing arguments
     def check_zero_to_one(value):
         fvalue = float(value)
         if fvalue < 0 or fvalue > 1:
@@ -160,18 +159,14 @@ def parse_args():
     args = p.parse_args()
     if args.orig_dir[-1] != '/': args.orig_dir += '/'
     if args.crop_dir[-1] != '/': args.crop_dir += '/'
-
-    return args
-
-
-if __name__ == "__main__":
-    args = parse_args()
+    
     print('Check arguments:')
     print('    Original dataset directory       :', args.orig_dir)
     print('    Directory to save cropped images :', args.crop_dir+'data'+str(args.size))
     print('    Spoof types to keep in dataset   :', args.spoof_types)
     print('    Crop size, bbox increasing       :', (args.size, args.bbox_inc))
     
+    # process images
     proceed = input('\nProceed? [y/n] : ').lower()[:1] == 'y'
     if proceed:
         # Read and filter labels
