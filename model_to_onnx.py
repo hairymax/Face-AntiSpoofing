@@ -4,6 +4,7 @@ import onnxsim
 
 from src.config import PretrainedConfig
 from src.antispoof_pretrained import AntiSpoofPretrained
+import os
 
 import argparse
 
@@ -28,15 +29,12 @@ if __name__ == "__main__":
                    help="Whether to print the model information (torchsummary is needed)")
     args = p.parse_args()
     
+    assert os.path.isfile(args.model_path), 'Model {} not found!'.format(args.model_path)
     # 'saved_models/AntiSpoofing_print-replay_128.pth'
     cnf = PretrainedConfig(args.model_path, num_classes=args.num_classes)
-    try:
-        model = AntiSpoofPretrained(cnf).model
-    except Exception as e:
-        print('Model not found!', e)
-        raise
-    else:
-        print(args.model_path, 'loaded successfully')
+    
+    model = AntiSpoofPretrained(cnf).model
+    print(args.model_path, 'loaded successfully')
         
     if args.print_summary:
         from torchsummary import summary

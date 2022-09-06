@@ -5,6 +5,28 @@ from sklearn.preprocessing import label_binarize
 import numpy as np
 
 
+def spoof_labels_to_classes(labels_df, classes):
+    df = labels_df.copy()
+    if len(classes) == 2:
+        def to_class(v):
+            return classes[0] if v == 0 else classes[1]
+    elif len(classes) == 3:
+        def to_class(v):
+            if v in [1,2,3]:
+                return classes[1]
+            if v in [7,8,9]:
+                return classes[2]
+            if v == 0:
+                return classes[0]
+            return None
+    else:
+        print('Labels will not be changed')
+        def to_class(v):
+            return v
+    df.iloc[:,1] = df.iloc[:,1].apply(lambda s: to_class(s))   
+    
+    return df
+
 def plot_value_counts(series, n_values=25, fillna='NONE', figwidth=12, 
                       bar_thickness=0.5, sort_index=False,
                       verbose=False, show_percents=False):

@@ -3,9 +3,9 @@ CelebA_Spoof/
 CelebA_Spoof_archive/
 CelebA_Spoof_crop/
 logs/
-runs/
+tmp/
 pyrightconfig.json
 *.vscode
 *__pycache__/
-*__init.py__
+__init.py__
 *.ipynb_checkpoints

@@ -53,7 +53,7 @@ def get_kernel(height, width):
 
 class TrainConfig(object):
     def __init__(self, img_size=128, input_size=128, batch_size=256, 
-                spoof_categories='binary', class_balancing=None):
+                 spoof_categories='binary', class_balancing=None):
         # training
         self.lr = 1e-1
         self.milestones = [10, 15, 22]  # down learing rate  # [9, 13, 15]
