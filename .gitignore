@@ -4,6 +4,7 @@ CelebA_Spoof_archive/
 CelebA_Spoof_crop/
 logs/
 tmp/
+test_imgs/
 pyrightconfig.json
 *.vscode
 *__pycache__/
