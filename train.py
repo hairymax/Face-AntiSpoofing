@@ -5,8 +5,8 @@ import argparse
 if __name__ == "__main__":
     # parsing arguments
     p = argparse.ArgumentParser(description="Training Face-AntiSpoofing Model")
-    p.add_argument("--img_size", type=int, default=128, 
-                    help="Size of prepared images in dataset")
+    p.add_argument("--crop_dir", type=str, default='data128', 
+                    help="Subdir with cropped images")
     p.add_argument("--input_size", type=int, default=128, 
                     help="Input size of images passed to model")
     p.add_argument("--batch_size", type=int, default=256, 
@@ -23,8 +23,8 @@ if __name__ == "__main__":
         spoof_categories = [[0],[1,2,3],[7,8,9]]
     
     # create config    
-    cnf = TrainConfig(img_size=args.img_size, 
-                      input_size=args.img_size, 
+    cnf = TrainConfig(crop_dir=args.crop_dir,
+                      input_size=args.input_size, 
                       batch_size=args.batch_size, 
                       spoof_categories=spoof_categories)
     cnf.set_job(args.job_name)

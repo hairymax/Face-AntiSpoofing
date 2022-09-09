@@ -5,6 +5,7 @@ from datetime import datetime
 
 SNAPSHOT_PATH = './logs/snapshot'
 LOG_PATH = './logs/jobs'
+DATA_PATH = './CelebA_Spoof_crop'
 
 class CelebAattr(object):
     # indexes 0 - 39
@@ -52,11 +53,12 @@ def get_kernel(height, width):
     return kernel_size
 
 class TrainConfig(object):
-    def __init__(self, img_size=128, input_size=128, batch_size=256, 
-                 spoof_categories='binary', class_balancing=None):
+    def __init__(self, input_size=128, batch_size=256, 
+                 spoof_categories='binary', class_balancing=None, 
+                 crop_dir='data128'):
         # training
         self.lr = 1e-1
-        self.milestones = [10, 15, 22]  # down learing rate  # [9, 13, 15]
+        self.milestones = [10, 15, 22, 30]  # down learing rate  # [9, 13, 15]
         self.gamma = 0.1
         self.epochs = 50
         self.momentum = 0.9
@@ -65,10 +67,9 @@ class TrainConfig(object):
         self.class_balancing = class_balancing
         
         # dataset
-        self.img_size = img_size
         self.input_size = input_size
-        self.train_path = './CelebA_Spoof_crop/data{}/train'.format(img_size)
-        self.labels_path = './CelebA_Spoof_crop/data{}/train/train_target.csv'.format(img_size)
+        self.train_path = '{}/{}/train'.format(DATA_PATH, crop_dir)
+        self.labels_path = '{}/{}/train/train_target.csv'.format(DATA_PATH, crop_dir)
         self.spoof_categories = spoof_categories 
 
         # model
@@ -87,7 +88,7 @@ class TrainConfig(object):
 
         self.device = "cuda:{}".format(device_id) if torch.cuda.is_available() else "cpu"
         
-        self.job_dir = "AntiSpoofing_{}".format(self.img_size)
+        self.job_dir = "AntiSpoofing_{}".format(self.input_size)
         self.job_name = "AntiSpoofing_{}_{}".format(name, self.input_size)
         # log path
         self.log_path = "{}/{}/{}_{}".format(
@@ -112,12 +113,12 @@ class PretrainedConfig(object):
 
 
 class TestConfig(PretrainedConfig):
-    def __init__(self, model_path, device_id=0, img_size=128, input_size=128, 
-                 batch_size=1, spoof_categories='binary'):
+    def __init__(self, model_path, device_id=0, input_size=128, 
+                 batch_size=1, spoof_categories='binary', crop_dir='data128'):
         super().__init__(model_path, device_id, input_size, 
                          get_num_classes(spoof_categories))
-        self.test_path = './CelebA_Spoof_crop/data{}/test'.format(img_size)
-        self.labels_path = './CelebA_Spoof_crop/data{}/test/test_target.csv'.format(img_size)
+        self.test_path = '{}/{}/test'.format(DATA_PATH, crop_dir)
+        self.labels_path = '{}/{}/test/test_target.csv'.format(DATA_PATH, crop_dir)
         self.spoof_categories = spoof_categories
         self.batch_size = batch_size        
 

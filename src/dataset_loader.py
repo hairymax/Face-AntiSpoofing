@@ -118,8 +118,8 @@ def get_train_valid_loader(cnf):
     
     train_transform = T.Compose([
         T.ToPILImage(),
-        SquarePad(),
-        T.Resize(size=cnf.input_size),
+        #SquarePad(),
+        T.Resize((cnf.input_size, cnf.input_size)),
         T.RandomResizedCrop(size=tuple(2*[cnf.input_size]), scale=(0.9, 1.1)),
         T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1),
         T.RandomRotation(10),
@@ -129,8 +129,8 @@ def get_train_valid_loader(cnf):
     
     valid_transform = T.Compose([
         T.ToPILImage(),
-        SquarePad(),
-        T.Resize(size=cnf.input_size),
+        #SquarePad(),
+        T.Resize((cnf.input_size, cnf.input_size)),
         T.ToTensor()
     ])
     

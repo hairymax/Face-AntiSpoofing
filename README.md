@@ -16,3 +16,8 @@ data128.zip - crop scaled to 128 pixels on the largest side.
 
 data256.zip - crop scaled to 256 pixels on the largest side.
               If the size of the cropped image was smaller than 256 on the largest side, it was not scaled
+
+Data preparation
+```sh
+python data_preparation.py --spoof_filter 0 1 2 3 7 8 9
+```
