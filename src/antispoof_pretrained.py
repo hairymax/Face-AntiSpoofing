@@ -23,15 +23,6 @@ class AntiSpoofPretrained:
         self.model.load_state_dict(new_state_dict)
         
     def predict(self, img):
-        # test_transform = T.Compose([
-        #     T.ToPILImage(),
-        #     SquarePad(),
-        #     T.Resize(size=self.input_size),
-        #     T.ToTensor()
-        # ])
-        # img = test_transform(img)
-        # if len(img.size()) < 4:
-        #     img = img.unsqueeze(0)
         img = img.to(self.device)
         self.model.eval()
         with torch.no_grad():
