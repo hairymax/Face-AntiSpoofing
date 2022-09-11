@@ -3,7 +3,6 @@ Face Anti-Spoofing project. Lanit-Tercom summer school 2022
 
 ### DataSet 
 Training was performed on the *CelebA Spoof* dataset ([GitHub](https://github.com/ZhangYuanhan-AI/CelebA-Spoof) | [Kaggle](https://www.kaggle.com/datasets/attentionlayer241/celeba-spoof-for-face-antispoofing)).    
-[full description](https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)
 
 <details><summary>Dataset Preparation</summary>
 <p>
