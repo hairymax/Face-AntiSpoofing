@@ -54,7 +54,7 @@ def read_image(image_path, bbox_inc = 1.5):
             img = img[y1:y2,x1:x2,:]
             img = cv2.copyMakeBorder(img, 
                                      y1-y, int(l*bbox_inc-y2+y), 
-                                     x1-x, int(l*bbox_inc)-x2+x, 
+                                     x1-x, int(l*bbox_inc-x2+x), 
                                      cv2.BORDER_CONSTANT, value=[0, 0, 0])
         except:
             print('Cropping Bounding Box of ' + image_path + ' goes wrong')   

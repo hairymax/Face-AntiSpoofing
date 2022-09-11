@@ -2,9 +2,20 @@
 Face Anti-Spoofing project. Lanit-Tercom summer school 2022
 
 ### DataSet 
-avialable at [Google Drive](https://drive.google.com/drive/folders/1-0157hLG1PCJ9pIqvjEAWpSKhwdCEm2N?usp=sharing) 
+Training was performed on the *CelebA Spoof* dataset ([GitHub](https://github.com/ZhangYuanhan-AI/CelebA-Spoof) | [Kaggle](https://www.kaggle.com/datasets/attentionlayer241/celeba-spoof-for-face-antispoofing)).    
+[full description](https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)
 
-This folder contains the original CelebA_Spoof dataset - [full description](https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)
+<details><summary>Dataset Preparation</summary>
+<p>
+
+#### Cropping Faces
+
+```sh
+   python data_preparation.py --spoof_filter 0 1 2 3 7 8 9
+```
+
+</p>
+</details> 
 
 `archive.zip` - archive with original dataset
 
@@ -19,5 +30,5 @@ data256.zip - crop scaled to 256 pixels on the largest side.
 
 Data preparation
 ```sh
-python data_preparation.py --spoof_filter 0 1 2 3 7 8 9
+   python data_preparation.py --spoof_filter 0 1 2 3 7 8 9
 ```

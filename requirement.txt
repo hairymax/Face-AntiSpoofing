@@ -1,0 +1,11 @@
+opencv-python
+torch
+torchvision
+numpy
+onnx
+onnxsim
+onnxruntime
+pandas
+tqdm
+tensorboardX
+scikit-learn
