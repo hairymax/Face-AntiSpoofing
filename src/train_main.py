@@ -1,5 +1,4 @@
-# Original code https://github.com/minivision-ai/Silent-Face-Anti-Spoofing by @zhuyingSeu
-# Modified by @hairymax
+# @hairymax
 
 import torch
 from torch import optim

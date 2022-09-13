@@ -114,6 +114,7 @@ def transform_labels(labels, categories):
         spoof_transform = lambda t: next(i for i, l in enumerate(categories) if t in l)
     return labels.apply(spoof_transform)
 
+
 def get_train_valid_loader(cnf):
     
     train_transform = T.Compose([
@@ -139,7 +140,6 @@ def get_train_valid_loader(cnf):
     if cnf.spoof_categories is not None:
         train_labels.iloc[:,1] = transform_labels(train_labels.iloc[:,1],
                                                   cnf.spoof_categories)
-    
     if cnf.class_balancing is not None:
         cb = cnf.class_balancing
         if cb == 'down':
@@ -188,7 +188,6 @@ def get_test_loader(cnf):
     if cnf.spoof_categories is not None:
         test_labels.iloc[:,1] = transform_labels(test_labels.iloc[:,1],
                                                  cnf.spoof_categories)
-    
     test_loader = DataLoader(
         CelebADataset(cnf.test_path, test_labels, test_transform, None), 
         batch_size=cnf.batch_size, pin_memory=True, #num_workers=8
