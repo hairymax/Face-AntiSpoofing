@@ -43,7 +43,7 @@ Generates dataset of squared crops of faces with live, print and replay images o
 `orig_dir` - Directory with original Celeba_Spoof dataset (*'./CelebA_Spoof'* by default)    
 `crop_dir` - Directory to save cropped dataset (*'./CelebA_Spoof_crop'* by default)    
 </p>
-</details><br>
+</details>
 
 ### Step 2. Train Model
 An example of a training script call
@@ -60,7 +60,7 @@ Trains the model with PyTorch, records metrics in *./logs/jobs/* with tensorboar
 `num_classes` - **2** for binary or **3** for live-print-replay classification    
 `job_name` - Suffix for model name saved in snapshots dir    
 </p>
-</details><br>
+</details>
 
 ### Step 3. Convert Model to ONNX format
 ```sh
@@ -68,7 +68,7 @@ python model_to_onnx.py path/to/model.pth num_classes
 ```
 
 ## Repository
-The required libraries are listed in the file `requirement.txt`
+The required libraries are listed in the file `requirements.txt`
 ```sh
 pip install -r requirements.txt
 ```
