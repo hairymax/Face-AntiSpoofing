@@ -121,18 +121,3 @@ class TestConfig(PretrainedConfig):
         self.labels_path = '{}/{}/test/test_target.csv'.format(DATA_PATH, crop_dir)
         self.spoof_categories = spoof_categories
         self.batch_size = batch_size        
-
-# class TestConfig(object):
-#     def __init__(self, img_size=128, input_size=128, batch_size=1,
-#                  spoof_categories='binary', device_id=0, 
-#                  model_path='saved_models/AntiSpoofing_bin_128.pth'):
-#         # dataset
-#         self.model_path = model_path
-#         self.device = "cuda:{}".format(device_id) if torch.cuda.is_available() else "cpu"
-#         self.input_size = input_size
-#         self.kernel_size = get_kernel(input_size, input_size)
-#         self.test_path = './CelebA_Spoof_crop/data{}/test'.format(img_size)
-#         self.labels_path = './CelebA_Spoof_crop/data{}/test/test_target.csv'.format(img_size)
-#         self.spoof_categories = spoof_categories
-#         self.num_classes = get_num_classes(spoof_categories)
-#         self.batch_size = batch_size
