@@ -31,8 +31,8 @@ Examples and the results of model training you can find in Jupyter Notebook
 
 Best models metrics on the test set
 
-|Accuracy | AUC-ROC | Precision | Recall | F1 score |
-| ---- | ---- | ---- | ---- | ---- |
+|Task | Accuracy | AUC-ROC | Precision | Recall | F1 score |
+| ---- | ---- | ---- | ---- | ---- | ---- |
 |Live / Spoof | 0.9292 | 0.986919 | 0.974257 | 0.904714 | 0.938198 |
 |Live / Print / Replay | 0.9328 | 0.990246 | 0.982771 | 0.902694 | 0.941032 |
 
