@@ -7,6 +7,8 @@ Face Anti-Spoofing project. Lanit-Tercom summer school 2022
 
 - **Print attack**: The attacker shows the picture of other person printed on a sheet of paper 
 - **Replay attack**: The attacker shows the screen of another device that plays a pre-recorded photo/video of the other person.
+## Demo
+https://user-images.githubusercontent.com/6792913/190157993-5c484b2f-834b-4914-b230-4a92021b8ef4.mp4
 
 ## DataSet 
 Training was performed on the *CelebA Spoof* dataset ([GitHub](https://github.com/ZhangYuanhan-AI/CelebA-Spoof) | [Kaggle](https://www.kaggle.com/datasets/attentionlayer241/celeba-spoof-for-face-antispoofing)).
