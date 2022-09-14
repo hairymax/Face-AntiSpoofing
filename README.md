@@ -66,7 +66,7 @@ An example of a training script call
 ```sh
 python train.py --crop_dir data_1.5_128 --input_size 128 --batch_size 256 --num_classes 2
 ```
-Trains the model with PyTorch, records metrics in *./logs/jobs/* with tensorboard, and stores the weights of the trained- in *./logs/snapshot/*
+Trains the model with PyTorch, records metrics in *./logs/jobs/* with tensorboard, and stores the weights of the trained models in *./logs/snapshot/*
 <details><summary> train.py arguments</summary>
 <p>
 
