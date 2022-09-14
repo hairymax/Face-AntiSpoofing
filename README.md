@@ -36,7 +36,7 @@ Best models metrics on the test set
 |Live / Spoof | 0.9292 | 0.986919 | 0.974257 | 0.904714 | 0.938198 |
 |Live / Print / Replay | 0.9328 | 0.990246 | 0.982771 | 0.902694 | 0.941032 |
 
-Print / Replay classes have been reduced to one Spoof class
+In order to evaluate metrics Print / Replay classes have been reduced to one Spoof class after predictions
 ## Using the code
 ### Step 1. Dataset Preparation
 - Download [CelebA Spoof dataset](https://www.kaggle.com/datasets/attentionlayer241/celeba-spoof-for-face-antispoofing) to `./CelebA_Spoof` directory.
