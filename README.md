@@ -19,7 +19,7 @@ Pretrained models located in the directory *.\saved_models*
 Training was performed on the *CelebA Spoof* dataset ([GitHub](https://github.com/ZhangYuanhan-AI/CelebA-Spoof) | [Kaggle](https://www.kaggle.com/datasets/attentionlayer241/celeba-spoof-for-face-antispoofing)).
 ## Model
 In this project we train and test the CNN models with architecture presented in [Silent-Face-Anti-Spoofing GitHub repository](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing/) to detect Spoof attacks. The model architecture consists of the main branch of classification of attack type and the auxiliary supervision branch of Fourier spectrum. The Fourier transform is used only in the training stage.
-### Example images of train loader with fourier spectrum
+### Example images of train loader with Fourier spectrum
 ![image](https://user-images.githubusercontent.com/6792913/190170749-437e443d-0ce7-43e6-9238-f4b2212da348.png)
 ## Tasks
 Training was performed for two types of classification tasks:
@@ -33,8 +33,8 @@ Best models metrics on the test set
 
 |Accuracy | AUC-ROC | Precision | Recall | F1 score |
 | ---- | ---- | ---- | ---- | ---- |
-|Live / Spoof | 0.9292 | 0.986919	| 0.974257	| 0.904714	| 0.938198|
-|Live / Print / Replay | 0.9328 | 0.990246	| 0.982771	| 0.902694	| 0.941032|
+|Live / Spoof | 0.9292 | 0.986919 | 0.974257 | 0.904714 | 0.938198 |
+|Live / Print / Replay | 0.9328 | 0.990246 | 0.982771 | 0.902694 | 0.941032 |
 
 Print / Replay classes have been reduced to one Spoof class
 ## Using the code
