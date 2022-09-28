@@ -12,9 +12,20 @@ https://user-images.githubusercontent.com/6792913/190157993-5c484b2f-834b-4914-b
 
 To process your videofile for detecting spoofing attacks run
 ```sh
-python video_predict.py path/to/video.mp4 path/to/out_video.mp4 --model_path path/to/model.onnx 
+python video_predict.py path/to/video.mp4 path/to/out_video.mp4 -m path/to/model.onnx -t 0.75 
 ```
+Be sure to replace the arguments with your own  
 Pretrained models located in the directory *.\saved_models*
+<details><summary> video_predict.py arguments</summary>
+<p>
+
+`input` - Path to video for predictions     
+`output` - Path to save processed video   
+`--model_path` (`-m`) - Path to pretrained ONNX model    
+`--threshold`, (`-t`) - Real face probability threshold above which the prediction is considered true    
+</p>
+</details>
+
 ## DataSet 
 Training was performed on the *CelebA Spoof* dataset ([GitHub](https://github.com/ZhangYuanhan-AI/CelebA-Spoof) | [Kaggle](https://www.kaggle.com/datasets/attentionlayer241/celeba-spoof-for-face-antispoofing)).
 ## Model

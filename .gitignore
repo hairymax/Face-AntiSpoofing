@@ -6,6 +6,7 @@ logs/
 tmp/
 test_imgs/
 pyrightconfig.json
+FaceAntiSpoofing.ipynb
 *.vscode
 *__pycache__/
 __init.py__

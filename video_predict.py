@@ -29,9 +29,9 @@ def increased_crop(img, bbox : tuple, bbox_inc : float = 1.5):
                              cv2.BORDER_CONSTANT, value=[0, 0, 0])
     return img
 
-def make_prediction(img, face_detector, anti_spoof):
+def make_prediction(img, face_detector, anti_spoof, threshold=None):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    # 
+     
     bbox = face_detector([img])[0]
     
     if bbox.shape[0] > 0:
@@ -40,8 +40,11 @@ def make_prediction(img, face_detector, anti_spoof):
         return None
 
     pred = anti_spoof([increased_crop(img, bbox, bbox_inc=1.5)])[0]
-    label = np.argmax(pred)
     score = pred[0][0]
+    if threshold is not None:
+        label = int(~(score > threshold))
+    else:
+        label = np.argmax(pred)    
     
     return bbox, label, score
 
@@ -51,9 +54,11 @@ if __name__ == "__main__":
         description="Spoofing attack detection on videostream")
     p.add_argument("input", type=str, help="Path to video for predictions")
     p.add_argument("output", type=str, help="Path to save processed video")
-    p.add_argument("--model_path", type=str, 
+    p.add_argument("--model_path", "-m", type=str, 
                    default="saved_models/AntiSpoofing_bin_1.5_128.onnx", 
                    help="Path to ONNX model")
+    p.add_argument("--threshold", "-t", type=float, default=None, 
+                   help="real face probability threshold above which the prediction is considered true")
     args = p.parse_args()
     
     face_detector = YOLOv5('saved_models/yolov5s-face.onnx')
@@ -83,7 +88,7 @@ if __name__ == "__main__":
         ret, frame = vid_capture.read()
         if ret == True:
             # predict score of Live face
-            pred = make_prediction(frame, face_detector, anti_spoof)
+            pred = make_prediction(frame, face_detector, anti_spoof, args.threshold)
             # if face is detected
             if pred is not None:
                 (x1, y1, x2, y2), label, score = pred
