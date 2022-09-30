@@ -12,19 +12,20 @@ https://user-images.githubusercontent.com/6792913/190157993-5c484b2f-834b-4914-b
 
 To process your videofile for detecting spoofing attacks run
 ```sh
-python video_predict.py path/to/video.mp4 path/to/out_video.mp4 -m path/to/model.onnx -t 0.75 
+python video_predict.py -i path/to/video.mp4 -o path/to/out_video.mp4 -m path/to/model.onnx -t 0.75 
 ```
-Be sure to replace the arguments with your own  
-Pretrained models located in the directory *.\saved_models*
-<details><summary> video_predict.py arguments</summary>
+Be sure to replace the arguments with your own. Running the script without the `-i` argument will start the prediction on the video stream from the webcam. 
+<details><summary> video_predict.py arguments details:</summary>
 <p>
 
-`input` - Path to video for predictions     
-`output` - Path to save processed video   
+`--input` (`-i`) - Path to video for predictions, if not passed webcam stream will be processed  
+`--output` (`-o`) - Path to save processed video, if not passed the processed video will not be saved   
 `--model_path` (`-m`) - Path to pretrained ONNX model    
-`--threshold`, (`-t`) - Real face probability threshold above which the prediction is considered true    
+`--threshold` (`-t`) - Real face probability threshold above which the prediction is considered true, default 0.5    
 </p>
 </details>
+
+Pretrained models located in the directory *.\saved_models*
 
 ## DataSet 
 Training was performed on the *CelebA Spoof* dataset ([GitHub](https://github.com/ZhangYuanhan-AI/CelebA-Spoof) | [Kaggle](https://www.kaggle.com/datasets/attentionlayer241/celeba-spoof-for-face-antispoofing)).
@@ -56,19 +57,19 @@ In order to evaluate metrics Print / Replay classes have been reduced to one Spo
 python data_preparation.py --spoof_types 0 1 2 3 7 8 9 --bbox_inc 1.5 --size 128
 ```
 Generates dataset of squared crops of faces with live, print and replay images of shape 3x128x128 in subdir `/data_1.5_128` of `./CelebA_Spoof_crop` directory.
-<details><summary> data_preparation.py arguments</summary>
+<details><summary> data_preparation.py arguments details</summary>
 <p>
 
-`spoof_types` - list of spoof types to keep, according to original labels:
+`--spoof_types` - list of spoof types to keep, according to original labels:
    - `0`     - Live
    - `1`,`2`,`3` - Print
    - `4`,`5`,`6` - Paper Cut
    - `7`,`8`,`9` - Replay  
 
-`bbox_inc` - Image bbox increasing, value 1 makes no effect. Crops were made according to bbox markup, which is recorded in the files '\*_BB.txt' for each photo.     
-`size` - the size of the cropped image (height = width = `size`)   
-`orig_dir` - Directory with original Celeba_Spoof dataset (*'./CelebA_Spoof'* by default)    
-`crop_dir` - Directory to save cropped dataset (*'./CelebA_Spoof_crop'* by default)    
+`--bbox_inc` - Image bbox increasing, value 1 makes no effect. Crops were made according to bbox markup, which is recorded in the files '\*_BB.txt' for each photo.     
+`--size` - the size of the cropped image (height = width = `size`)   
+`--orig_dir` - Directory with original Celeba_Spoof dataset (*'./CelebA_Spoof'* by default)    
+`--crop_dir` - Directory to save cropped dataset (*'./CelebA_Spoof_crop'* by default)    
 </p>
 </details>
 
@@ -78,14 +79,14 @@ An example of a training script call
 python train.py --crop_dir data_1.5_128 --input_size 128 --batch_size 256 --num_classes 2
 ```
 Trains the model with PyTorch, records metrics in *./logs/jobs/* with tensorboard, and stores the weights of the trained models in *./logs/snapshot/*
-<details><summary> train.py arguments</summary>
+<details><summary> train.py arguments details</summary>
 <p>
 
-`crop_dir` - Name of subdir with cropped images in *./CelebA_Spoof_crop* directory     
-`input_size` - Input size of images passed to model (height = width = `input_size`)   
-`batch_size` - Count of images in the batch    
-`num_classes` - **2** for binary or **3** for live-print-replay classification    
-`job_name` - Suffix for model name saved in snapshots dir    
+`--crop_dir` - Name of subdir with cropped images in *./CelebA_Spoof_crop* directory     
+`--input_size` - Input size of images passed to model (height = width = `input_size`)   
+`--batch_size` - Count of images in the batch    
+`--num_classes` - **2** for binary or **3** for live-print-replay classification    
+`--job_name` - Suffix for model name saved in snapshots dir    
 </p>
 </details>
 

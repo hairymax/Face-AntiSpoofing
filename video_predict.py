@@ -6,6 +6,7 @@ import argparse
 
 COLOR_REAL = (0, 255, 0)
 COLOR_FAKE = (0, 0, 255)
+COLOR_UNKNOWN = (127, 127, 127)
 
 def increased_crop(img, bbox : tuple, bbox_inc : float = 1.5):
     # Crop face based on its bounding box
@@ -29,9 +30,9 @@ def increased_crop(img, bbox : tuple, bbox_inc : float = 1.5):
                              cv2.BORDER_CONSTANT, value=[0, 0, 0])
     return img
 
-def make_prediction(img, face_detector, anti_spoof, threshold=None):
+def make_prediction(img, face_detector, anti_spoof):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-     
+    # 
     bbox = face_detector([img])[0]
     
     if bbox.shape[0] > 0:
@@ -41,23 +42,28 @@ def make_prediction(img, face_detector, anti_spoof, threshold=None):
 
     pred = anti_spoof([increased_crop(img, bbox, bbox_inc=1.5)])[0]
     score = pred[0][0]
-    if threshold is not None:
-        label = int(~(score > threshold))
-    else:
-        label = np.argmax(pred)    
+    label = np.argmax(pred)   
     
     return bbox, label, score
 
 if __name__ == "__main__":
     # parsing arguments
+    def check_zero_to_one(value):
+        fvalue = float(value)
+        if fvalue <= 0 or fvalue >= 1:
+            raise argparse.ArgumentTypeError("%s is an invalid value" % value)
+        return fvalue
+    
     p = argparse.ArgumentParser(
         description="Spoofing attack detection on videostream")
-    p.add_argument("input", type=str, help="Path to video for predictions")
-    p.add_argument("output", type=str, help="Path to save processed video")
+    p.add_argument("--input", "-i", type=str, default=None, 
+                   help="Path to video for predictions")
+    p.add_argument("--output", "-o", type=str, default=None,
+                   help="Path to save processed video")
     p.add_argument("--model_path", "-m", type=str, 
                    default="saved_models/AntiSpoofing_bin_1.5_128.onnx", 
                    help="Path to ONNX model")
-    p.add_argument("--threshold", "-t", type=float, default=None, 
+    p.add_argument("--threshold", "-t", type=check_zero_to_one, default=0.5, 
                    help="real face probability threshold above which the prediction is considered true")
     args = p.parse_args()
     
@@ -65,47 +71,73 @@ if __name__ == "__main__":
     anti_spoof = AntiSpoof(args.model_path)
 
     # Create a video capture object
-    vid_capture = cv2.VideoCapture(args.input)
+    if args.input:  # file
+        vid_capture = cv2.VideoCapture(args.input)
+    else:           # webcam
+        vid_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     frame_width = int(vid_capture.get(3))
     frame_height = int(vid_capture.get(4))
-    frame_size = (frame_width,frame_height)
+    frame_size = (frame_width, frame_height)
+    print('Frame size  :', frame_size)
 
-    if (vid_capture.isOpened() == False):
-        print("Error opening a video file")
+    if not vid_capture.isOpened():
+        print("Error opening a video stream")
     # Reading fps and frame rate
     else:
         fps = vid_capture.get(5)    # Get information about frame rate
-        print('Frame rate: ', fps, 'FPS')
-        frame_count = vid_capture.get(7)    # Get the number of frames
-        print('Frames count: ', frame_count) 
+        print('Frame rate  : ', fps, 'FPS')
+        if fps == 0:
+            fps = 24
+        # frame_count = vid_capture.get(7)    # Get the number of frames
+        # print('Frames count: ', frame_count) 
+    
     # videowriter
-    output = cv2.VideoWriter(args.output, 
-                            cv2.VideoWriter_fourcc(* 'XVID'), fps, frame_size)
-    print('Video is processed. Please wait...')
+    if args.output: 
+        output = cv2.VideoWriter(args.output, cv2.VideoWriter_fourcc(*'XVID'), fps, frame_size)
+    print("Video is processed. Press 'Q' or 'Esc' to quit")
+    
     # process frames
+    rec_width = max(1, int(frame_width/240))
+    txt_offset = int(frame_height/50)
+    txt_width = max(1, int(frame_width/480))
     while vid_capture.isOpened():
         ret, frame = vid_capture.read()
-        if ret == True:
+        if ret:
             # predict score of Live face
-            pred = make_prediction(frame, face_detector, anti_spoof, args.threshold)
+            pred = make_prediction(frame, face_detector, anti_spoof)
             # if face is detected
             if pred is not None:
                 (x1, y1, x2, y2), label, score = pred
                 if label == 0:
-                    res_text = "REAL      {:.2f}".format(score)
-                    color = COLOR_REAL
+                    if score > args.threshold:
+                        res_text = "REAL      {:.2f}".format(score)
+                        color = COLOR_REAL
+                    else: 
+                        res_text = "unknown"
+                        color = COLOR_UNKNOWN
                 else:
                     res_text = "FAKE      {:.2f}".format(score)
                     color = COLOR_FAKE
+                    
                 # draw bbox with label
-                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 8)
-                cv2.putText(frame, res_text, 
-                    (x1, y1-20), cv2.FONT_HERSHEY_COMPLEX, (x2-x1)/250, color, 3)
-            output.write(frame)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, rec_width)
+                cv2.putText(frame, res_text, (x1, y1-txt_offset), 
+                            cv2.FONT_HERSHEY_COMPLEX, (x2-x1)/250, color, txt_width)
+            
+            if args.output:
+                output.write(frame)
+            
+            # if video captured from webcam
+            if not args.input:
+                cv2.imshow('Face AntiSpoofing', frame)
+                key = cv2.waitKey(20)
+                if (key == ord('q')) or key == 27:
+                    break
         else:
             print("Streaming is Off")
             break
+
     # Release the video capture and writer objects
     vid_capture.release()
     output.release()
